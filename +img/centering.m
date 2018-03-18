@@ -8,6 +8,7 @@ function I_new = centering(I, varargin)
 %    gaussian filter (in pixels).
 %   -subtraction: Subtract mean, median or none (default).
     
+    import util.img.centering;
     import util.img.imshift;
     import util.img.gaussian2;
     import util.stat.corner_mean;
@@ -49,7 +50,7 @@ function I_new = centering(I, varargin)
     S = size(I_finder);
         
     if input.pixels
-        I_finder = maskBadPixels(I_finder);
+        I_finder = util.img.maskBadPixels(I_finder);
     end
     
     if cs(input.subtraction, 'median')

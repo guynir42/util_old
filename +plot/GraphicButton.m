@@ -275,7 +275,7 @@ classdef GraphicButton < handle
                 if cs(obj.type, 'input text', 7)
                     obj.String = [obj.str1 obj.owner.(obj.variable) obj.str2];
                 else
-                    obj.String = [obj.str1 num2str(obj.owner.(obj.variable)) obj.str2];
+                    obj.String = [obj.str1 util.text.print_vec(obj.owner.(obj.variable)) obj.str2];
                 end
                 
                 if isempty(obj.font_size)

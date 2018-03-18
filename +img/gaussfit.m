@@ -133,7 +133,7 @@ function [pars_out, residuals, gaussian] = gaussfit(I, varargin)
         end
     end
         
-    util.plot.show(g_func(b_final));
+%     util.plot.show(g_func(b_final));
     
     for ii = 1:length(input.list_scan_properties)
         name = input.list_scan_properties{ii};
@@ -197,7 +197,6 @@ function [rot, shift_x, shift_y] = parse_par_vec(par_vec)
         shift_x = par_vec(2);
         shift_y = par_vec(3);
     else
-        par_vec
         error('par_vec must be 1 to 3 elements long. ');
     end
 

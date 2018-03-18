@@ -24,7 +24,7 @@ function I = gaussian2(varargin)
     input.input_var('norm', 0, 'normalization');
     input.use_ordered_numeric = 1;
     input.scan_vars(varargin{:});
-       
+    
     if isempty(input.sigma_x) && isempty(input.sigma_y)
         error('Must supply a width of the Gaussian...');
     elseif ~isempty(input.sigma_x) && isempty(input.sigma_y)
@@ -40,8 +40,14 @@ function I = gaussian2(varargin)
                 
     [x,y] = meshgrid(-floor((input.S)/2):floor((input.S-1)/2));
     
-    x2 = +x*cos(pi/2*input.rot_frac)+y*sin(pi/2*input.rot_frac);
-    y2 = -x*sin(pi/2*input.rot_frac)+y*cos(pi/2*input.rot_frac);
+    if isempty(input.rot_frac)
+        x2 = x;
+        y2 = y;
+    else
+        x2 = +x*cos(pi/2*input.rot_frac)+y*sin(pi/2*input.rot_frac);
+        y2 = -x*sin(pi/2*input.rot_frac)+y*cos(pi/2*input.rot_frac);
+    end
+    
     I = exp(-0.5*((x2./input.sigma_x).^2 + (y2./input.sigma_y).^2));
     
     if input.norm==1
