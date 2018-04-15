@@ -2,7 +2,7 @@ classdef WorkingDirectory < handle
 % Keeps track of a directory in the filesystem. 
 % Lets you change dir, browse, and match files from the directory. 
 %
-% TEST PROTOCOL: d=util.WorkingDirectory; d.cd('..'); d.match('*.m'); d.pwd
+% TEST PROTOCOL: d=util.sys.WorkingDirectory; d.cd('..'); d.match('*.m'); d.pwd
 
     properties
     
@@ -353,10 +353,11 @@ classdef WorkingDirectory < handle
         function success = cd(obj, move_to)
             
             if isempty(move_to)
+                success = 0;
                 return;
             end
             
-            if isa(move_to, 'util.WorkingDirectory')
+            if isa(move_to, 'util.sys.WorkingDirectory')
                 move_to = move_to.pwd;
             end
             

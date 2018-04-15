@@ -4,7 +4,7 @@ function setprop(obj_vec, prop, val)
 % At this point doesn't handle 3D matrices... 
 
     if nargin==0
-        help('util.vec.setprop');
+        help('util.oop.setprop');
         return;
     end
     

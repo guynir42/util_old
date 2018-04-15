@@ -13,7 +13,7 @@ function M = median2(I)
     for ii = 1:size(I,3)
         for jj = 1:size(I,4)
             single_image = I(:,:,ii,jj);
-            M(1,1,ii,jj) = median(single_image(:));
+            M(1,1,ii,jj) = nanmedian(single_image(:));
         end
     end
 

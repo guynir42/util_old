@@ -6,5 +6,5 @@ function [X,Y] = centerGrid(M)
     S = util.vec.imsize(M, 'matrix');
 
     [X,Y] = meshgrid(-floor(S(2)/2):floor((S(2)-1)/2), -floor(S(1)/2):floor((S(1)-1)/2));
-        
+    
 end

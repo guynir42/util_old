@@ -1,15 +1,16 @@
+
+function [R] = inputdlg(str,value)
+% Improved input dialog. Usage: inputdlg(str, value=5)
+% Displays an input dialog with question text "str" and default value 5.
+% User may hit return after entering info.
+% 
 % taken shamelessly from https://www.mathworks.com/matlabcentral/newsreader/view_thread/295157
 % and also added a cancel button
 
-function [R] = inputdlg(str,value)
-% Improved input dialog. Usage: inputdlg(str='myinput', value=5)
-% User may hit return after entering info.
-% 
+if nargin==0, help('util.text.inputdlg'); return; end
 
-if nargin<2 % Default values if called without args.
+if nargin<2 || isempty(value)
     value = '5';
-elseif nargin<1
-    str = 'myinput';
 end
 
 if ~ischar(value)

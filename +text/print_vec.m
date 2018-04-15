@@ -16,7 +16,11 @@ function str = print_vec(vector, delimiter, pre_str, post_str)
         post_str = '';
     end
     
-    str = regexprep(num2str(vector),'\s+',delimiter);
+    if ~isempty(vector)
+        str = regexprep(num2str(util.vec.torow(vector)),'\s+',delimiter);
+    else
+        str = '';
+    end
     
     str = [pre_str str post_str];
     

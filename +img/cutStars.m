@@ -9,17 +9,17 @@ function varargout = cutStars(I, varargin)
 %    the input images. Default: 0
 %   -extract stars: copy the stamps before removing them, output in a
 %    second, 4D matrix. Default 0. 
-%   -cut pos: a vector of positions, dim 1 is the different stars and dim2
+%   -positions: a vector of positions, dim 1 is the different stars and dim2
 %    is the x then y position of the center of each stamp. Default []. 
 %   -stamp size: how big the square around each star should be. Default: 32
 %   -value: what to put in the stamp? Default: 0 (can also be NaN). 
 %   -num stars: how many stars to remove? Default: 0 (automatic). 
 %    If the cut_pos is given, this input can override the number of stars. 
 %    If no cut_pos is given, automatic number of stars uses the threshold. 
-%   -threshold: how bright should the star be to get removed (if num_stars
-%    is set to 0). 
+%   -threshold: how bright should the star be to get cut (if num_stars is
+%    set to 0). 
 %   -absolute value: look for minima and maxima. Default: 0
-%   -subtract: remove the mean from the summed image. Default: 0
+%   -subtract: subtract the mean from the summed image. Default: 0
 %   -smoothing: if you want to do a Gaussian smoothing before finding max. 
 %    The number given is the width parameter of the Gaussian. Default: 0
 %   -psf: if you want to do the smoothing/match filter with a custom PSF.
@@ -51,7 +51,7 @@ function varargout = cutStars(I, varargin)
     input = util.text.InputVars;
     input.input_var('remove_stars', false, 'zero');
     input.input_var('extract_stars', false, 'use_extract', 'copy', 'use_copy');
-    input.input_var('cut_pos', []);
+    input.input_var('positions', [], 'cut_pos');
     input.input_var('stamp_size', 32, 'cut_size', 'size');
     input.input_var('value', 0);
     input.input_var('num_stars', 0, 'number_stars');
@@ -65,10 +65,10 @@ function varargout = cutStars(I, varargin)
     
     % settle the number of stars...
     if isempty(input.num_stars) || input.num_stars==0
-        if isempty(input.cut_pos) && isempty(input.threshold)
+        if isempty(input.positions) && isempty(input.threshold)
             input.num_stars = 1;
-        elseif ~isempty(input.cut_pos)
-            input.num_stars = size(input.cut_pos,1);
+        elseif ~isempty(input.positions)
+            input.num_stars = size(input.positions,1);
         elseif ~isempty(input.threshold)
             input.num_stars = 1000; % upper limit (will break at threshold)...
         end
@@ -86,17 +86,14 @@ function varargout = cutStars(I, varargin)
         S = input.summed_image;
     end
 
-%     V = util.stat.mad2(S, 'type', 'mean', 'sigma', 1); % standard deviation using median absolute deviation
-    
-    
     stars_cell{1,1,N} = [];
     I_cut = I;
     
     for ii = 1:N
         
-        if ii<=size(input.cut_pos, 1) % use the positions as instructed
+        if ii<=size(input.positions, 1) % use the positions as instructed
             
-            idx = fliplr(input.cut_pos(ii,:));
+            idx = fliplr(input.positions(ii,:));
             
         else % N is larger than length of cut_pos, find the maximum yourself... 
             
@@ -112,15 +109,15 @@ function varargout = cutStars(I, varargin)
                 
                 N = ii-1;
                 
-                if size(input.cut_pos,1)>N
-                    input.cut_pos = input.cut_pos(1:N,:);
+                if size(input.positions,1)>N
+                    input.positions = input.positions(1:N,:);
                 end
                 
                 break;
                 
             end
             
-            input.cut_pos(ii,:) = fliplr(idx); % put the found maximum into cut_pos
+            input.positions(ii,:) = fliplr(idx); % put the found maximum into cut_pos
             
         end
         
@@ -159,7 +156,7 @@ function varargout = cutStars(I, varargin)
         if cs(input.output{ii}, 'summed image')
             varargout{ii} = S;
         elseif cs(input.output{ii}, 'cut position', 'position')
-            varargout{ii} = input.cut_pos;
+            varargout{ii} = input.positions;
         elseif cs(input.output{ii}, 'images cut')
             varargout{ii} = I_cut;
         elseif cs(input.output{ii}, 'stars', 'stamps', 'cutouts')

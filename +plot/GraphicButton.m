@@ -36,6 +36,7 @@ classdef GraphicButton < handle
         Callback;
         FontSize;
         Enable;
+        BackgroundColor;
         
     end
     
@@ -48,8 +49,8 @@ classdef GraphicButton < handle
     
     methods % constructor
         
-        function obj = GraphicButton(parent, position, owner, var_name, type, str1, str2, font_size, self_name, buttons_name)
-            
+        function obj = GraphicButton(parent, position, owner, var_name, type, str1, str2, font_size, self_name, buttons_name, color_on, color_off)
+
             import util.text.cs;
             
             if nargin<4
@@ -80,6 +81,14 @@ classdef GraphicButton < handle
             
             if nargin<10 || isempty(buttons_name)
                 buttons_name = 'buttons';
+            end
+            
+            if nargin<11 || isempty(color_on)
+                color_on = [];
+            end
+            
+            if nargin<12 || isempty(color_off)
+                color_off = [];
             end
             
             if cs(type, 'push')
@@ -138,7 +147,9 @@ classdef GraphicButton < handle
             obj.type = type;
             obj.str1 = str1;
             obj.str2 = str2;
-            
+            obj.color_on = color_on;
+            obj.color_off = color_off;
+
             obj.update;
             
             if isprop(obj.owner.(self_name), buttons_name)
@@ -195,6 +206,12 @@ classdef GraphicButton < handle
             
         end
         
+        function val = get.BackgroundColor(obj)
+            
+            val = obj.control.BackgroundColor;
+            
+        end
+        
     end
     
     methods % setters
@@ -241,6 +258,11 @@ classdef GraphicButton < handle
             
         end
         
+        function set.BackgroundColor(obj, val)
+            
+            obj.control.BackgroundColor= val;
+            
+        end
         
     end
     
@@ -264,8 +286,18 @@ classdef GraphicButton < handle
                 
                 if obj.owner.(obj.variable)
                     obj.String = obj.str2;
+                    if ~isempty(obj.color_on)
+                        obj.control.ForegroundColor = obj.color_on;
+                    elseif ~isempty(obj.color_off) % if the off color is not set to default, must turn back to default when "on"
+                        obj.control.ForegroundColor = 'black';
+                    end
                 else
                     obj.String = obj.str1;
+                    if ~isempty(obj.color_off)
+                        obj.control.ForegroundColor = obj.color_off;
+                    elseif ~isempty(obj.color_on)
+                        obj.control.ForegroundColor = 'black'; % if the in color is not set to default, must turn back to default when "off"
+                    end
                 end
                 
                 obj.FontSize = obj.owner.gui.([font_size 'font_size']);
@@ -292,7 +324,9 @@ classdef GraphicButton < handle
             elseif cs(obj.type, 'custom', 'input custom')
                 
                 obj.FontSize = obj.owner.gui.([font_size 'font_size']);
-                                
+            
+            else
+                obj.FontSize = obj.owner.gui.([font_size 'font_size']);
             end
             
         end
@@ -381,6 +415,14 @@ classdef GraphicButton < handle
 
             obj.owner.gui.update;            
             
+        end
+        
+    end
+   
+    methods(Static=true)
+        
+        function val = defaultColor
+            val = 0.94*ones(1,3);
         end
         
     end

@@ -1,7 +1,7 @@
 classdef AudioControl <handle
 % class that plays sound effects (e.g. when starting/ending analysis)
 %
-% TEST PROTOCOL: a = util.AudioControl; a.playTakeForever;
+% TEST PROTOCOL: a = util.sys.AudioControl; a.playTakeForever;
     
     properties(SetAccess='protected')
        

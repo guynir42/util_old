@@ -25,7 +25,7 @@ function copy_props(obj_to, obj_from, deep)
         if props(ii).Dependent==0
             
             if ~isprop(obj_to, name) % no such property in obj_to               
-                if isa(obj.to, 'dynamicprops') % maybe it is a dynamicprops type
+                if isa(obj_to, 'dynamicprops') % maybe it is a dynamicprops type
                     addprop(obj_to, name);
                 else
                     continue; % no luck, skip to next property
@@ -33,7 +33,7 @@ function copy_props(obj_to, obj_from, deep)
             end
             
             if deep && isa(obj_from.(name), 'handle')
-                obj_to.(name) = util.oop.full_copy(obj_from.(name));
+                obj_to.(name) = util.oop.full_copy(obj_from.(name)); % need to change this so it handles circular references...
             else
                 obj_to.(name) = obj_from.(name);
             end

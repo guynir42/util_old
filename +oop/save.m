@@ -1,6 +1,6 @@
-function save(obj, filename, varargin)
+function file_handle = save(obj, filename, varargin)
 % Saves an object into a txt, HDF5 or mat file. 
-% usage: saveHDF5(obj, filename, varargin). 
+% usage: save(obj, filename, varargin). 
 %
 % Will automatically convert all short properties into "attributes" and all
 % long (data) properties into datasets. 
@@ -22,9 +22,10 @@ function save(obj, filename, varargin)
 %    sub-objects inside larger files). HDF5 only. 
 %   -recursive: check this in order to save all sub-objects, too (default: 1)
 %   -data_save: check if the object's data should be saved (or just 
-%    attributes). HDF5 only. 
+%    attributes). For text files this is always 0. 
 %   -format: type of file to save. Default is .mat but will also read the 
 %    extension of "filename" if exists. Other options: hdf5, text.
+%    Can also use "struct" option to output a cell array of attribute structs. 
 %   -append: check this to append data to existing file (default: 0, 
 %    so overwrites existing file). 
 %   -name: the name of this object as it is shown in the file (default=inputname(1)).
@@ -57,7 +58,7 @@ function save(obj, filename, varargin)
 
     input.scan_vars(varargin);
     
-    if builtin('isempty', obj), return; end
+    if builtin('isempty', obj), file_handle = filename; return; end
     
     % try to guess the format (if not given directly...)
     if isempty(input.format) && ischar(filename)
@@ -82,9 +83,9 @@ function save(obj, filename, varargin)
         
     end
     
-    % if we want to just use the MAT format (this is the default if no ext exists
+    % if we want to just use the MAT format (this is the default if no extension exists
     if isempty(input.format) || cs(input.format, 'mat')
-        par_list = {obj, filename, inputname(1)};
+        par_list = {filename, 'obj', '-v7.3'};
         
         if ~isempty(input.deflate) && input.deflate==0
             par_list = [par_list '-nocompression'];
@@ -123,6 +124,8 @@ function save(obj, filename, varargin)
                 file_handle = fopen(filename, 'wt');
             end
             file_handle_cleanup = onCleanup(@() fclose(file_handle));
+        elseif cs(input.format, 'struct')
+            file_handle = {};
         end
     else
         file_handle = filename; % if it isn't a string, must already be a handle
@@ -152,6 +155,7 @@ function save(obj, filename, varargin)
     end
     
     group_handle = saveHeader(file_handle, obj, input); % make a header / create new group for the object
+        
 %     group_handle_cleanup = onCleanup(@() H5G.close(group_handle));
     
     props = util.oop.list_props(obj); % get the property list, including dynamic properties... 
@@ -163,7 +167,7 @@ function save(obj, filename, varargin)
             if props(ii).Transient                
                 if input.debug_bit, disp(['prop: ' name ' is transient. Skipping...']); end
             else
-                saveProperty(group_handle, name, obj.(name), input);
+                group_handle = saveProperty(group_handle, name, obj.(name), input);
             end
             
         catch ME
@@ -171,8 +175,12 @@ function save(obj, filename, varargin)
         end
     end
     
-    % for text files, do another round for sub-objects...
-    if cs(input.format, 'text', 'txt') && input.recursive
+    if cs(input.format, 'struct', 'cell')
+        file_handle = group_handle; % keep passing around the cell array... 
+    end
+    
+    % for text files (or struct), do another round for sub-objects...
+    if cs(input.format, 'text', 'txt', 'struct', 'cell') && input.recursive
         try
             for ii = 1:length(props)
                 
@@ -183,7 +191,7 @@ function save(obj, filename, varargin)
                     
                     if input.debug_bit, disp(['prop: ' name ' now saved as object...']); end
                     
-                    util.oop.save(value, file_handle, input.output_vars{:}, 'name', name);
+                    file_handle = util.oop.save(value, file_handle, input.output_vars{:}, 'name', name);
                 
                 elseif isa(value, 'datetime')
                     continue;
@@ -195,7 +203,7 @@ function save(obj, filename, varargin)
                         
                             if input.debug_bit, disp(['prop: ' name '(' num2str(jj) ') now saved as object...']); end
                         
-                            util.oop.save(value(jj), file_handle, input.output_vars{:}, 'name', [name '(' num2str(jj) ')']);
+                            file_handle = util.oop.save(value(jj), file_handle, input.output_vars{:}, 'name', [name '(' num2str(jj) ')']);
                             
                         end
                                                 
@@ -209,7 +217,7 @@ function save(obj, filename, varargin)
                         
                             if input.debug_bit, disp(['prop: ' name '{' num2str(jj) '} now saved as object...']); end
                         
-                            util.oop.save(value{jj}, file_handle, input.output_vars{:}, 'name', [name '{' num2str(jj) '}']);
+                            file_handle = util.oop.save(value{jj}, file_handle, input.output_vars{:}, 'name', [name '{' num2str(jj) '}']);
                             
                         end
                         
@@ -234,16 +242,17 @@ function save(obj, filename, varargin)
                 H5.close;
             end
         end
-        
     end
 
 end
 
 function file_handle = saveHeader(file_handle, obj, input)
     
+    import util.text.cs;
+    
     input.location = util.text.sa(input.location, input.name);
     
-    if util.text.cs(input.format, 'hdf5', 'h5', 'h5z')
+    if cs(input.format, 'hdf5', 'h5', 'h5z')
         
         link_create_properties = H5P.create('H5P_LINK_CREATE');
         link_create_properties_cleanup = onCleanup(@() H5P.close(link_create_properties));
@@ -253,27 +262,29 @@ function file_handle = saveHeader(file_handle, obj, input)
         
         saveString(file_handle, 'object_classname', class(obj), input);
         
-    elseif util.text.cs(input.format, 'text', 'txt')
+    elseif cs(input.format, 'text', 'txt')
         fprintf(file_handle, '\n  OBJECT LOG FOR: "%s" | CLASS: %s | LOCATION: %s\n\n', input.name, class(obj), input.location);
+    elseif cs(input.format, 'struct', 'cell')
+        file_handle{end+1} = struct('save_struct_object_address', input.location, 'object_classname', class(obj)); % a new row in the output cell array of structs
     else
         error(['Unknown file type: ' input.format '... use HDF5 or TEXT.']);
     end
-    
+        
 end
 
-function saveProperty(file_handle, name, value, input)
+function file_handle = saveProperty(file_handle, name, value, input)
     
     if ischar(value)
         
         if input.debug_bit, disp(['prop: ' name ' is string. Writing as attribute...']); end
         
-        saveString(file_handle, name, value, input);
+        file_handle = saveString(file_handle, name, value, input);
         
     elseif iscell(value)
         
         if input.debug_bit, disp(['prop: ' name ' is cell array. Writing as as separate attributes/datasets...']); end
         
-        saveCell(file_handle, name, value, input);
+        file_handle = saveCell(file_handle, name, value, input);
         
     elseif isnumeric(value)
         
@@ -281,61 +292,62 @@ function saveProperty(file_handle, name, value, input)
             
             if input.debug_bit, disp(['prop: ' name ' is empty. Writing as attribute...']); end
             
-            saveNumericAtt(file_handle, name, value, input);
+            file_handle = saveNumericAtt(file_handle, name, value, input);
             
         elseif isscalar(value)
             
             if input.debug_bit, disp(['prop: ' name ' is scalar. Writing as attribute...']); end
             
-            saveNumericAtt(file_handle, name, value, input);
+            file_handle = saveNumericAtt(file_handle, name, value, input);
             
         elseif isvector(value) && length(value)<=input.att_length
             
             if input.debug_bit, disp(['prop: ' name ' is a vector shorter/equal to ' num2str(input.att_length) '. Writing as attribute...']); end
             
-            saveNumericAtt(file_handle, name, value, input);
+            file_handle = saveNumericAtt(file_handle, name, value, input);
             
         elseif isvector(value) && length(value)>input.att_length
             
             if input.debug_bit
                 fprintf('prop: %s is a vector longer than %d...', name, input.att_length);
-                if util.text.cs(input.format, 'hdf5', 'h5', 'h5z')
+                if util.text.cs(input.format, 'hdf5', 'h5', 'h5z', 'struct', 'cell')
                     fprintf('Writing as dataset to %s\n', util.text.sa(input.location, name));
                 elseif util.text.cs(input.format, 'text', 'txt')
                     fprintf('Writing data size only. \n');
                 end
             end
             
-            saveMatrix(file_handle, name, value, input);
+            file_handle = saveMatrix(file_handle, name, value, input);
             
         elseif ismatrix(value)
             
             if input.debug_bit 
                 fprintf('prop: %s is a matrix... ', name);
-                if util.text.cs(input.format, 'hdf5', 'h5', 'h5z')
+                if util.text.cs(input.format, 'hdf5', 'h5', 'h5z', 'struct', 'cell')
                     fprintf('Writing as dataset to %s\n', util.text.sa(input.location, name)); 
                 elseif util.text.cs(input.format, 'text', 'txt')
                     fprintf('Writing data size only. \n');
                 end
             end
             
-            saveMatrix(file_handle, name, value, input);
+            file_handle = saveMatrix(file_handle, name, value, input);
             
         end
         
     elseif isobject(value)
                 
         if input.debug_bit, disp(['prop: ' name ' is an object... placing link.']); end
-        
-        saveObject(file_handle, name, value, input);
+        file_handle = saveObject(file_handle, name, value, input);
         
     end
     
 end
 
-function saveString(file_handle, name, value, input)
+function file_handle = saveString(file_handle, name, value, input)
     
-    if util.text.cs(input.format, 'hdf5', 'h5', 'h5z')
+    import util.text.cs;
+    
+    if cs(input.format, 'hdf5', 'h5', 'h5z')
         
         % properties
         acpl = H5P.create('H5P_ATTRIBUTE_CREATE');
@@ -373,15 +385,20 @@ function saveString(file_handle, name, value, input)
 %         H5T.close(type_id);
 %         H5P.close(acpl);
         
-    elseif util.text.cs(input.format, 'text', 'txt')
+    elseif cs(input.format, 'text', 'txt')
         fprintf(file_handle, '%25s: %s\n', name, value);  
+    elseif cs(input.format, 'struct', 'cell')
+        file_handle{end}.(name) = value;
     else
         error(['Unknown file type: ' input.format '... use HDF5 or TEXT.']);
     end
 end
 
-function saveNumericAtt(file_handle, name, value, input)
-    if util.text.cs(input.format, 'hdf5', 'h5', 'h5z')
+function file_handle = saveNumericAtt(file_handle, name, value, input)
+    
+    import util.text.cs;
+    
+    if cs(input.format, 'hdf5', 'h5', 'h5z')
         
         % properties
         acpl = H5P.create('H5P_ATTRIBUTE_CREATE');
@@ -415,20 +432,24 @@ function saveNumericAtt(file_handle, name, value, input)
 %         H5T.close(type_id);
 %         H5P.close(acpl);
         
-    elseif util.text.cs(input.format, 'text', 'txt')
+    elseif cs(input.format, 'text', 'txt')
         if isscalar(value)
             fprintf(file_handle, '%25s: %s\n', name, util.text.print_vec(value));
         else
             fprintf(file_handle, '%25s: [%s]\n', name, util.text.print_vec(value));
         end
+    elseif cs(input.format, 'struct', 'cell')
+        file_handle{end}.(name) = value;
     else
         error(['Unknown file type: ' input.format '... use HDF5 or TEXT.']);
     end
 end
 
-function saveMatrix(file_handle, name, value, input)
+function file_handle = saveMatrix(file_handle, name, value, input)
     
-    if util.text.cs(input.format, 'hdf5', 'h5', 'h5z')
+    import util.text.cs;
+    
+    if cs(input.format, 'hdf5', 'h5', 'h5z')
         
         % properties
         link_create_properties = H5P.create('H5P_LINK_CREATE');
@@ -478,18 +499,20 @@ function saveMatrix(file_handle, name, value, input)
 %         H5P.close(dataset_create_properties);
 %         H5P.close(link_create_properties);
         
-    elseif util.text.cs(input.format, 'text', 'txt')
+    elseif cs(input.format, 'text', 'txt')
         fprintf(file_handle, '%25s: [%s %s]\n', name, util.text.print_vec(size(value), 'x'), class(value));
+    elseif cs(input.format, 'struct', 'cell')
+        file_handle{end}.(name) = value;
     else
         error(['Unknown file type: ' input.format '... use HDF5 or TEXT.']);
     end
 end
 
-function saveCell(file_handle, name, value, input)
+function file_handle = saveCell(file_handle, name, value, input)
     
     for ii = 1:length(value)
         try
-            saveProperty(file_handle, [name '{' num2str(ii) '}'], value{ii}, input);
+            file_handle = saveProperty(file_handle, [name '{' num2str(ii) '}'], value{ii}, input);
         catch ME
             error(['Error when saving ' name '{' num2str(ii) '}. ', getReport(ME)]);
         end
@@ -497,12 +520,14 @@ function saveCell(file_handle, name, value, input)
     
 end
 
-function saveObject(file_handle, name, value, input)
+function file_handle = saveObject(file_handle, name, value, input)
+    
+    import util.text.cs;
     
     size_vec = builtin('size', value);
     
     if prod(size_vec)==0
-        saveNumericAtt(file_handle, name, [], input); % leave an empty value instead of object...
+        file_handle = saveNumericAtt(file_handle, name, [], input); % leave an empty value instead of object...
         return;
     elseif prod(size_vec)==1 
         link_address = checkList(value, input.handle_list);
@@ -510,7 +535,7 @@ function saveObject(file_handle, name, value, input)
         link_address = ''; % for obj-vectors we just let "save" break them up into separate objects for us. 
     end
     
-    if util.text.cs(input.format, 'hdf5', 'h5', 'h5z')
+    if cs(input.format, 'hdf5', 'h5', 'h5z')
         
         if isa(value, 'datetime')
             saveString(file_handle, name, util.text.time2str(value), input);
@@ -528,7 +553,7 @@ function saveObject(file_handle, name, value, input)
         
         end
         
-    elseif util.text.cs(input.format, 'text', 'txt')
+    elseif cs(input.format, 'text', 'txt')
         
         if builtin('isempty', value)
             fprintf(file_handle, '%25s: [%s %s]\n', name, util.text.print_vec(size_vec, 'x'), class(value));
@@ -544,6 +569,21 @@ function saveObject(file_handle, name, value, input)
                 fprintf(file_handle, '\n');
             end
         end
+    elseif cs(input.format, 'struct', 'cell')
+        if builtin('isempty', value)
+            str = sprintf('[%s %s]', util.text.print_vec(size_vec, 'x'), class(value));
+        elseif isa(value, 'datetime')
+            str = sprintf('%s', util.text.time2str(value));
+        elseif ~isempty(link_address)
+            str = sprintf('[%s %s] (link: %s)', util.text.print_vec(size_vec, 'x'), class(value), link_address); % link back to existing location
+        else   
+            if input.recursive && ~builtin('isempty', value)
+                str = sprintf('[%s %s] (link: %s)', util.text.print_vec(size_vec, 'x'), class(value), util.text.sa(input.location, name)); % give the link to the location to come
+            else
+                str = sprintf('[%s %s]', util.text.print_vec(size_vec, 'x'), class(value));
+            end
+        end
+        file_handle{end}.(name) = str;
     else
         error(['Unknown file type: ' input.format '... use HDF5 or TEXT.']);
     end

@@ -100,7 +100,7 @@ classdef InputVars < dynamicprops
                 val = varargin{ii+1};
                 
                 if isnumeric(key)
-                    error(['Input keyword-value pair is broken. Expected string but got ' num2str(key) ' instead'])
+                    error(['Input keyword-value pair is broken. Expected string but got ' num2str(key(1:10)) ' instead'])
                 elseif ~ischar(key)
                     error(['Input keyword-value pair is broken. Expected string but got ' class(key) ' instead'])
                 end
@@ -180,10 +180,17 @@ classdef InputVars < dynamicprops
         function setupDataInput(obj)
             
             obj.input_var('images', []);
-            obj.input_var('cut_pos', []);
+            obj.input_var('images_raw', []);
+            obj.input_var('images_cal', []);
+            obj.input_var('cutouts_raw', []);
+            obj.input_var('cutouts_cal', []);
+            obj.input_var('positions', [], 'cut_pos');
+            obj.input_var('full_sum', [], 'images_sum');
+            obj.input_var('num_sum', []);
             obj.input_var('timestamps', []);
-            obj.input_var('file_write_timestamp', [], 'write_timestamp');
-            obj.input_var('file_write_datestr', [], 'write_datestr', 'datestring');
+            obj.input_var('t_start', [], 'write_datestr', 'datestring', 'file_write_datestr');
+            obj.input_var('t_end_stamp', [], 'write_timestamp', 'file_write_timestamp');
+            obj.input_var('t_end', [], 'write_datestr', 'file_write_datestr');
             obj.input_var('psfs', []);
             obj.input_var('psf_sampling', []);
             obj.input_var('lightcurves', []);

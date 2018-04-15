@@ -15,7 +15,7 @@ function [image_reduced, mask] = maskBadPixels(image, filler, sigma)
     
     if nargin==0, help('util.img.maskBadPixels'); return; end    
     if nargin<2, filler = []; end
-    if nargin<3 || isempty(sigma), sigma = 3; end
+    if nargin<3 || isempty(sigma), sigma = 5; end
     
     if size(image,4)>1 % handle 4D matrices
         
@@ -48,7 +48,7 @@ function [image_reduced, mask] = maskBadPixels(image, filler, sigma)
     
     ker = ones(3)./8;
     ker(2,2) = 0; % nearest neighbors kernel
-    image_conv = filter2(ker, double(image));
+    image_conv = filter2(ker, double(abs(image)));
     
     mask = logical( abs(double(image))>abs(sigma.*(image_conv)) );
     
