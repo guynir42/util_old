@@ -5,6 +5,11 @@ function M_out = crop2size(M_in, size_needed)
 
     if nargin==0, help('util.img.crop2size'); return; end
 
+    if isempty(size_needed)
+        M_out = M_in;
+        return;
+    end
+    
     size_needed = util.vec.imsize(size_needed);
     S_in = util.vec.imsize(M_in);
     
@@ -19,7 +24,7 @@ function M_out = crop2size(M_in, size_needed)
         x1 = 1+ceil(gap(2));
         x2 = S_in(2)-floor(gap(2));
         
-        M_out = M_in(y1:y2,x1:x2,:);
+        M_out = M_in(y1:y2,x1:x2,:,:);
         
     else
         M_out = M_in;

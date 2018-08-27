@@ -1,9 +1,14 @@
 function [values, radii] = radialStats(M, func, varargin)
+% usage: [values, radii] = radialStats(M, func, varargin)
 % run annulusPixels on all radii in M, do a function on the pixels or give
 % them back as a cell array. 
-% if func= "cell" will give the results can choose any function without parameters... (std, var, mean, max, min...)
+% if func= "cell" will give the results. can choose any function without parameters... (std, var, mean, max, min...)
+
     import util.text.cs;
     import util.img.annulusPixels;
+    
+    if nargin==0, help('util.img.radialStats'); return; end
+    
     if nargin<2 || isempty(func)
         func = 'cell';
     end

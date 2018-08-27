@@ -16,6 +16,8 @@ if nargin==0
     return;
 end
 
+a = 0;
+
 cell_array = {};
 num_letters = [];
 
@@ -31,13 +33,15 @@ for ii = 1:length(varargin)
     
 end
 
+if ~ischar(str)
+    return;
+end
+
 if isempty(str) && iscell(cell_array) && ~any(cellfun(@isempty, cell_array))
-    a = 0;
     return;
 end
 
 if isempty(str) &&  ~isempty(cell_array)
-    a = 0;
     return;
 end
 

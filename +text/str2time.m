@@ -8,7 +8,7 @@ function time = str2time(str, timezone)
         return;
     end
 
-    if isempty(str) || strcmp(str, '[]')
+    if isempty(str) || all(strcmp(str, '[]'))
         time = datetime.empty;
         return;
     end
@@ -17,8 +17,16 @@ function time = str2time(str, timezone)
         timezone = 'UTC';
     end
     
-    vec = sscanf(str, '%4d-%2d-%2dT%2d:%2d:%f')';
-
+    if ischar(str)
+        vec = sscanf(str, '%4d-%2d-%2dT%2d:%2d:%f')';
+    elseif iscell(str)
+        for ii = 1:length(str)
+            vec(ii,:) = sscanf(str{ii}, '%4d-%2d-%2dT%2d:%2d:%f')';
+        end
+    else
+        error('Must supply a string or cell of strings to "str2time"! Instead got %s.', class(str));
+    end
+    
     time = datetime(vec, 'TimeZone', timezone);
     
 end

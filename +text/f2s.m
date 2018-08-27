@@ -15,7 +15,7 @@ function str = f2s(float, decimals)
     
     str = '';
     
-    if all(float==round(float))
+    if all(float==round(float)) && all(abs(float)<1000)
         str = util.text.print_vec(float);
         return;
     end

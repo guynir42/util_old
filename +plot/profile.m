@@ -8,8 +8,7 @@ function [width, lines, pix_length, direction] = profile(M, varargin)
     import util.stat.max2;
     import util.stat.min2;
     import util.img.maskBadPixels;
-    import util.vec.tocell;
-    
+    import util.vec.tocell;   
 
     if nargin<1
         disp('PROFILE will display the cross section profile from a 2D matrix');

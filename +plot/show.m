@@ -69,6 +69,7 @@ function hndl = show(M, varargin)
         aspect_ratio = [1 1 1];
         fft_shift = 0;
         monochrome = 0;
+        font_size = 18;
         
         if ~isempty(varargin) && mod(length(varargin),2)==1
             varargin{end+1} = 1; % positive approach
@@ -116,6 +117,8 @@ function hndl = show(M, varargin)
                 fft_shift = parse_bool(varargin{ii+1});
             elseif cs(varargin{ii}, {'monochrome', 'grayscale'})
                 monochrome = parse_bool(varargin{ii+1});
+            elseif cs(varargin{ii}, 'font_size')
+                font_size = varargin{ii+1};
             end
                         
         end
@@ -254,7 +257,7 @@ function hndl = show(M, varargin)
     catch ME
         rethrow(ME);
     end
-    
+        
     try % statistics
         
         MAX = [];
@@ -293,10 +296,11 @@ function hndl = show(M, varargin)
         end
         
         if fancy
+            
             colorbar(ax);
             title(ax, sprintf('mx=%s \\mu=%s \\sigma=%s c.\\mu=%s c.\\sigma=%s',...
                 f2s(MAX), f2s(MEAN), f2s(STD), f2s(CMEAN), f2s(CSTD)),...
-                'FontSize', 14);
+                'FontSize', font_size);
         
         else
             set(ax,'XTick',[]);
@@ -341,6 +345,8 @@ function hndl = show(M, varargin)
             end
         end
         
+        ax.FontSize = font_size;
+        
     else % for playback of multiple images
         
         for ii = page_vec
@@ -353,11 +359,20 @@ function hndl = show(M, varargin)
             text(0.1,0.1,['frame: ' num2str(ii)], 'Units','Normalized','FontSize',14, 'Parent', ax);
             axis(ax, 'image');
             ax.DataAspectRatio = aspect_ratio;
-            colorbar(ax);
+            
+            ax.FontSize = font_size;
+            if fancy
+                
+                title(ax, sprintf('mx=%s \\mu=%s \\sigma=%s c.\\mu=%s c.\\sigma=%s', ...
+                    f2s(MAX(ii)), f2s(MEAN(ii)), f2s(STD(ii)), ...
+                    f2s(CMEAN(ii)), f2s(CSTD(ii))),'FontSize', font_size);
+                
+                colorbar(ax);
         
-            title(ax, sprintf('mx=%s \\mu=%s \\sigma=%s c.\\mu=%s c.\\sigma=%s', ...
-                f2s(MAX(ii)), f2s(MEAN(ii)), f2s(STD(ii)), ...
-                f2s(CMEAN(ii)), f2s(CSTD(ii))),'FontSize', 14);
+            else
+                set(ax,'XTick',[]);
+                set(ax,'YTick',[]);
+            end
             
             if ~isempty(zoom_input)
                                 
@@ -399,6 +414,7 @@ function hndl = show(M, varargin)
             end
             
             pause(pause_length);
+            drawnow;
             
         end % for ii
         

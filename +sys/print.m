@@ -46,14 +46,14 @@ function print(filename, varargin)
             if use_export
 
                 try % export PNG
-                    export_fig(filename,'-png');
+                    export_fig(filename,'-png', varargin{:});
                 catch ME
                     warning(ME.getReport);
 %                     print('-dpng', ['-r' num2str(resolution)], filename);
                 end
 
                 try % export PDF
-                    export_fig(filename, '-pdf')
+                    export_fig(filename, '-pdf', varargin{:})
                 catch ME
                     warning(ME.getReport);
 %                     print(['-r' num2str(resolution)], filename, '-dpdf');

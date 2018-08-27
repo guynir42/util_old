@@ -49,13 +49,31 @@
 %
 % 11/22/98  Implemented by Edward Brian Welch, edwardbrianwelch@yahoo.com
 %
-function[Image] = RotateImage(Image, degrees)
+function[Image] = RotateImage(Image, degrees, varargin)
 
+    import util.text.cs;
+    import util.text.parse_bool;
     import util.fft.RotateImage;
-        
+    
     if nargin==0
         help('util.fft.RotateImage');
         return;
+    end
+    
+    use_conv = 1;
+    use_mask = 1;
+    
+    for ii = 1:2:length(varargin)
+        
+        key = varargin{ii};
+        val = varargin{ii+1};
+        
+        if cs(key, 'convolution', 'use_convolution')
+            use_conv = parse_bool(val);
+        elseif cs(key, 'mask', 'use_mask')
+            use_mask = parse_bool(val);
+        end
+        
     end
     
     if size(Image,3)>1
@@ -191,7 +209,7 @@ Image22 = fft(Image22, 2*ydim, 2);
 
 % Mask aliased components from SKEW 1
 Image22 = fftshift(Image22);
-Image22 = MaskImage( Image22, 1, 0, negtan_thetadiv2, 1);
+if use_mask, Image22 = MaskImage( Image22, 1, 0, negtan_thetadiv2, 1, use_conv); end
 Image22 = fftshift(Image22);
 
 %  Inverse FFT the image rows
@@ -241,7 +259,7 @@ Image22 = fft(Image22, 2*xdim, 1);
 
 % Mask aliased components from SKEW 2
 Image22 = fftshift(Image22);
-Image22 = MaskImage( Image22, 1, sin_theta, 0,  1);
+if use_mask, Image22 = MaskImage( Image22, 1, sin_theta, 0,  1, use_conv); end
 Image22 = fftshift(Image22);
 
 % Inverse FFT the image columns
@@ -291,7 +309,7 @@ Image2 = fft(Image2, ydim, 2);
 % Mask aliased components from SKEW 3
 % The /2.0 factor is there because columns have been cropped in half
 Image2 = fftshift(Image2);
-Image2 = MaskImage( Image2, 1, 0, negtan_thetadiv2/2.0, 1);
+if use_mask, Image2 = MaskImage( Image2, 1, 0, negtan_thetadiv2/2.0, 1, use_conv); end
 Image2 = fftshift(Image2);
 
 % Inverse 2D FFT the image
@@ -327,9 +345,11 @@ end
 %
 % 11/22/98  Implemented by Edward Brian Welch, edwardbrianwelch@yahoo.com
 %
-function[Image] = MaskImage(Image, a, b, c, d)
+function[Image] = MaskImage(Image, a, b, c, d, use_conv)
 
 import util.fft.conv_f;
+
+% return 
 
 % NOTE:
 % This function is highly vectorized (no loops)
@@ -374,7 +394,9 @@ mask = new_x_mat & new_y_mat;
 Nx=ceil(xdim*.2);
 Ny=ceil(ydim*.2);
 % mask = conv2(double(mask),ones(Nx,Ny)/(Nx*Ny),'same');
-mask = conv_f(ones(Nx,Ny)/(Nx*Ny), double(mask), 'crop', 'same');
+if use_conv
+    mask = conv_f(ones(Nx,Ny)/(Nx*Ny), double(mask), 'crop', 'same');
+end
 
 Image = Image.*mask;
   

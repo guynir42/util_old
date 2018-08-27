@@ -110,6 +110,18 @@ classdef GraphicButton < handle
                 obj.control = uicontrol(parent, 'Style', 'pushbutton', 'Units', 'Normalized', 'Position', position);
                 obj.Callback = @obj.callback_toggle;
                 
+            elseif cs(type, 'auto')
+                if isempty(str1) 
+                    str1 = var_name;
+                end
+                
+                if isempty(str2)
+                    str2 = ''; % not in use right now
+                end
+                
+                obj.control = uicontrol(parent, 'Style', 'pushbutton', 'Units', 'Normalized', 'Position', position);
+                obj.Callback = @obj.callback_auto;
+                
             elseif cs(type, 'input', 'input text', 'input custom')
                 
                 if isempty(str1)
@@ -302,6 +314,29 @@ classdef GraphicButton < handle
                 
                 obj.FontSize = obj.owner.gui.([font_size 'font_size']);
                 
+            elseif cs(obj.type, 'auto')
+                
+                if isempty(obj.owner.(obj.variable))
+                    obj.String = [obj.str1 ' auto'];
+                    obj.control.ForegroundColor = 0.4*[1 1 1];
+                elseif obj.owner.(obj.variable)
+                    obj.String = [obj.str1 ' on'];
+                    if ~isempty(obj.color_on)
+                        obj.control.ForegroundColor = obj.color_on;
+                    else
+                        obj.control.ForegroundColor = 'black';
+                    end
+                elseif ~obj.owner.(obj.variable)
+                    obj.String = [obj.str1 ' off'];
+                    if ~isempty(obj.color_off)
+                        obj.control.ForegroundColor = obj.color_off;
+                    else
+                        obj.control.ForegroundColor = 'black';
+                    end
+                end
+                
+                obj.FontSize = obj.owner.gui.([font_size 'font_size']);
+                
             elseif cs(obj.type, 'input', 'input text')
                 
                 if cs(obj.type, 'input text', 7)
@@ -358,6 +393,22 @@ classdef GraphicButton < handle
             if obj.owner.gui.debug_bit, disp(['callback: ' obj.variable]); end
                 
             obj.owner.(obj.variable) = ~obj.owner.(obj.variable);
+            
+            obj.owner.gui.update;
+            
+        end
+        
+        function callback_auto(obj, ~, ~)
+            
+            if obj.owner.gui.debug_bit, disp(['callback: ' obj.variable]); end
+                
+            if isempty(obj.owner.(obj.variable))
+                obj.owner.(obj.variable) = 0;
+            elseif obj.owner.(obj.variable)
+                obj.owner.(obj.variable) = [];
+            elseif ~obj.owner.(obj.variable)
+                obj.owner.(obj.variable) = 1;
+            end
             
             obj.owner.gui.update;
             

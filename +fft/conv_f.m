@@ -71,39 +71,54 @@ function M_out = conv_f(kernel, image, varargin)
             M_out = zeros([SI size(image,3)]);
         end
         
-        for ii = 1:size(image,3)
-            if size(kernel,3)>1
-                if conjugate 
-                    M_out(:,:,ii) = filter2(kernel(:,:,ii), image(:,:,ii), crop);
-                else
-                    M_out(:,:,ii) = conv2(image(:,:,ii), kernel(:,:,ii), crop);
+        for jj = 1:size(image,4)
+            for ii = 1:size(image,3)
+                
+                k = kernel;
+                if size(kernel,4)>1
+                    k = k(:,:,:,jj);
                 end
-            else
+                
+                if size(kernel,3)>1
+                    k = k(:,:,ii);
+                end
+                
                 if conjugate
-                    M_out(:,:,ii) = filter2(kernel, image(:,:,ii), crop);
+                    M_out(:,:,ii,jj) = filter2(k, image(:,:,ii,jj), crop);
                 else
-                    M_out(:,:,ii) = conv2(image(:,:,ii), kernel, crop);
+                    M_out(:,:,ii,jj) = conv2(image(:,:,ii,jj), k, crop);
                 end
+                
             end
         end
         
     elseif S(1)*S(2)*size(image,3)*16*4>1024^3*mem_limit_gb % out of memory, use conv_f on slices 
         
-        if size(image,3)>1
+        if size(image,3)>1 || size(image,4)>1
 
             disp(['memory exceeded: ' num2str(S(1)*S(2)*size(image,3)*16*4/1024^3) 'Gb... using slices of matrices instead']);
             
             if cs(crop, 'full')
-                M_out = zeros([S size(image,3)]);
+                M_out = zeros([S size(image,3) size(image,4)]);
             elseif cs(crop, 'same')
-                M_out = zeros([SI size(image,3)]);
+                M_out = zeros([SI size(image,3) size(image,4)]);
             end
 
-            for ii = 1:size(image,3)
-                if size(kernel,3)>1
-                    M_out(:,:,ii) = conv_f(kernel(:,:,ii), image(:,:,ii), varargin{:});
-                else
-                    M_out(:,:,ii) = conv_f(kernel, image(:,:,ii), varargin{:});
+            for jj = 1:size(image,4)
+                for ii = 1:size(image,3)
+                    
+                    k = kernel;
+                    
+                    if size(kernel,4)>1
+                        k = k(:,:,:,jj);
+                    end
+                    
+                    if size(kernel,3)>1
+                        k = k(:,:,ii);
+                    end
+                    
+                    M_out(:,:,ii,jj) = conv_f(k, image(:,:,ii,jj), varargin{:});
+                    
                 end
             end
             

@@ -27,6 +27,7 @@ function I_out = downsample(I, binning, normalization, memory_limit)
         return;
     end
     
+    binning = round(binning);
     k = ones(binning);
     if util.text.cs(normalization, 'mean')    
         k = k./sum(k(:));
@@ -36,6 +37,6 @@ function I_out = downsample(I, binning, normalization, memory_limit)
     I_conv = util.fft.conv_f(k, I, 'mem_limit', memory_limit); 
     
     index = mod(size(I),binning)+1; % starting index for sampling...
-    I_out = I_conv(index(1):binning:end, index(2):binning:end, :);
+    I_out = I_conv(index(1):binning:end-binning, index(2):binning:end-binning, :);
 
 end

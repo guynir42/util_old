@@ -21,6 +21,7 @@ function M = annulusMask(ImSize, varargin)
     R_min = 0;
     R_max = floor(min(ImSize)/2)-1; 
     feather = [];
+    oversampling = [];
     
     for ii = 1:2:length(varargin)
         
@@ -30,9 +31,17 @@ function M = annulusMask(ImSize, varargin)
             R_max = varargin{ii+1};
         elseif cs(varargin{ii}, 'feather')
             feather = varargin{ii+1};
+        elseif cs(varargin{ii}, 'oversampling', 'sampling')
+            oversampling = varargin{ii+1};
         end
         
     end
+    
+    if ~isempty(oversampling) && round(oversampling)~=oversampling
+        error('must use a round value for "oversampling"!');
+    end
+    
+    ImSize = round(ImSize);
     
     if isscalar(ImSize)
         ImSize = [ImSize ImSize];
@@ -46,6 +55,12 @@ function M = annulusMask(ImSize, varargin)
         
     ImSize = ImSize(1:2);
     
+    if ~isempty(oversampling) && oversampling>1
+        ImSize = ImSize*oversampling;
+        R_max = R_max*oversampling;
+        R_min = R_min*oversampling;
+    end
+    
     [x,y] = meshgrid(1:ImSize(2), 1:ImSize(1));
 
     center = (ImSize/2)+0.5;
@@ -54,16 +69,32 @@ function M = annulusMask(ImSize, varargin)
     y = y - center(1);
     
     dist = sqrt(x.^2+y.^2);
-
-    M = R_max-dist;
-    M(M>1) = 1;
-    M(M<0) = 0;
     
-    if R_min>0
-        M2 = dist-R_min;
-        M2(M2>1) = 1;
-        M2(M2<0) = 0;        
-        M = M & M2;
+    method = 1;
+    
+    if method==1
+    
+        M = ones(round(ImSize));
+        M(dist<R_min) = 0;
+        M(dist>R_max) = 0;
+        
+    elseif method==2
+    
+        M = R_max-dist;
+        M(M>1) = 1;
+        M(M<0) = 0;
+
+        if R_min>0
+            M2 = dist-R_min;
+            M2(M2>1) = 1;
+            M2(M2<0) = 0;
+            M = M & M2;
+        end
+        
+    end
+    
+    if ~isempty(oversampling) && oversampling>1
+        M = util.img.downsample(M, oversampling, 'mean');
     end
         
     if feather

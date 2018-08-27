@@ -105,8 +105,16 @@ function file_handle = save(obj, filename, varargin)
             
             H5.open;
             if input.append
-%                 error('Still not implemented appending of HDF5 files...');
-                file_handle = H5F.open(filename, 'H5F_ACC_RDWR', 'H5P_DEFAULT');
+                if ~exist(filename, 'file')
+                    error('Cannot append, file does not exist: %s', filename);
+                end
+                
+                try 
+                    file_handle = H5F.open(filename, 'H5F_ACC_RDWR', 'H5P_DEFAULT');
+                catch ME
+                    disp(['problem saving file: ' filename]);
+                    rethrow(ME);
+                end
             else
                 if exist(filename, 'file')
                     delete(filename);
@@ -187,19 +195,19 @@ function file_handle = save(obj, filename, varargin)
                 name = props(ii).Name;
                 value = obj.(name);
                 
-                if isobject(value) && props(ii).Transient==0 && ~isa(value, 'datetime') && length(value)<2 && isempty(checkList(value, input.handle_list))
+                if isobject(value) && props(ii).Transient==0 && ~isa(value, 'datetime') && ~isa(value, 'containers.Map') && length(value)<2 && isempty(checkList(value, input.handle_list))
                     
                     if input.debug_bit, disp(['prop: ' name ' now saved as object...']); end
                     
                     file_handle = util.oop.save(value, file_handle, input.output_vars{:}, 'name', name);
                 
-                elseif isa(value, 'datetime')
+                elseif isa(value, 'datetime') || isa(value, 'containers.Map')
                     continue;
                 elseif isobject(value) && props(ii).Transient==0 && length(value)>1
                     
                     for jj = 1:length(value)
                         
-                        if ~isa(value(jj), 'datetime') && isempty(checkList(value(jj), input.handle_list))
+                        if ~isa(value(jj), 'datetime') && ~isa(value(jj), 'containers.Map') && isempty(checkList(value(jj), input.handle_list))
                         
                             if input.debug_bit, disp(['prop: ' name '(' num2str(jj) ') now saved as object...']); end
                         
@@ -539,6 +547,9 @@ function file_handle = saveObject(file_handle, name, value, input)
         
         if isa(value, 'datetime')
             saveString(file_handle, name, util.text.time2str(value), input);
+        elseif isa(value, 'containers.Map')
+            saveCell(file_handle, [name '.keys'], value.keys, input);
+            saveCell(file_handle, [name '.values'], value.values, input);
         else
         
             if isempty(link_address) % check if we need to save a copy of this object
@@ -559,6 +570,9 @@ function file_handle = saveObject(file_handle, name, value, input)
             fprintf(file_handle, '%25s: [%s %s]\n', name, util.text.print_vec(size_vec, 'x'), class(value));
         elseif isa(value, 'datetime')
             fprintf(file_handle, '%25s: %s\n', name, util.text.time2str(value));
+        elseif isa(value, 'containers.Map')
+            saveCell(file_handle, [name '.keys'], value.keys, input);
+            saveCell(file_handle, [name '.values'], value.values, input);
         elseif ~isempty(link_address)
             fprintf(file_handle, '%25s: [%s %s] (link: %s)\n', name, util.text.print_vec(size_vec, 'x'), class(value), link_address); % link back to existing location
         else

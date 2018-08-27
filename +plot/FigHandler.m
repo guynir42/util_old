@@ -102,8 +102,9 @@ classdef FigHandler < handle
                 return;
             end
             
-            delete(obj.fig.Children);
-            
+%             delete(obj.fig.Children);
+            clf(obj.fig);
+
         end
         
         function parse(obj, varargin)

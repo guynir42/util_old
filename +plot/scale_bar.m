@@ -1,9 +1,12 @@
 function h = scale_bar(varargin)
+% draws a scale bar on an image (with number of pixels/arcseconds). 
+% keyword-value pairs:
 
     import util.text.cs;
 
+    if nargin==0, help('util.plot.scale_bar'); return; end
+    
     ax = [];
-    pixel_length = []; % pixel length
     user_length = [];
     location = 'SouthWest';
     position = [];
@@ -93,7 +96,7 @@ function h = scale_bar(varargin)
     if isempty(line_offset)
         line_offset = ceil(0.1*min(size(I)));
     end
-       
+        
     if isempty(position)
        if cs(location, {'southwest','sw'})
            position(1) = line_offset;
@@ -125,15 +128,15 @@ function h = scale_bar(varargin)
         text_align = 'Left';
     end
     
-    line(position(1)+[0 pixel_length], position(2)*[1 1], 'Color', color);
-    line(position(1)*[1 1], position(2)+[-1 1]*edge_length, 'Color', color);
-    line(position(1)*[1 1]+pixel_length, position(2)+[-1 1]*edge_length, 'Color', color);
+    line(ax, position(1)+[0 pixel_length], position(2)*[1 1], 'Color', color);
+    line(ax, position(1)*[1 1], position(2)+[-1 1]*edge_length, 'Color', color);
+    line(ax, position(1)*[1 1]+pixel_length, position(2)+[-1 1]*edge_length, 'Color', color);
     
     if isempty(font_size)
         font_size = get(0, 'DefaultTextFontSize');
     end
     
-    text(position(1)+text_offset, position(2), str, 'Color', color, 'FontSize', font_size, 'HorizontalAlignment', text_align);
+    text(ax, position(1)+text_offset, position(2), str, 'Color', color, 'FontSize', font_size, 'HorizontalAlignment', text_align);
         
 
 end
