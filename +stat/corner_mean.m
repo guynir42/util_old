@@ -1,5 +1,5 @@
 function M = corner_mean(img, num_pix)
-% usage: corner_mean(img, num_pix=0.15*size(img))
+% usage: M = corner_mean(img, num_pix=0.15*size(img))
 % calculates the mean of the pixels in the corner of the image.
 % the number of pixels by default is 15% of the size of image. 
 % handles 3D and 4D matrices.
@@ -15,7 +15,7 @@ function M = corner_mean(img, num_pix)
         num_pix = 0.15;
     end
     
-    if num_pix>0 && num_pix<1 
+    if num_pix>0 && num_pix<=1 
         num_pix = ceil(min(size(img, 1), size(img,2))*num_pix);
     end
 

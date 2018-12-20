@@ -15,7 +15,7 @@ function S = corner_var(img, num_pix)
         num_pix = 0.15;
     end
     
-    if num_pix>0 && num_pix<1 
+    if num_pix>0 && num_pix<=1 
         num_pix = ceil(min(size(img, 1), size(img,2))*num_pix);
     end
     

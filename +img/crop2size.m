@@ -1,5 +1,5 @@
-function M_out = crop2size(M_in, size_needed)
-% usage: crop2size(M_in, size_needed)
+function [M_out, gap] = crop2size(M_in, size_needed)
+% usage: [M_out, gap] =crop2size(M_in, size_needed)
 % crops the given array M_in to size size_needed, leaving it in the middle. 
 % Won't grow the array. Can handle 3D matrices.
 
@@ -26,8 +26,11 @@ function M_out = crop2size(M_in, size_needed)
         
         M_out = M_in(y1:y2,x1:x2,:,:);
         
+        gap = ceil(gap);
+        
     else
         M_out = M_in;
+        gap = [0 0];
     end
     
 end

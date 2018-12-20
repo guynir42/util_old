@@ -1,4 +1,4 @@
-function S = sum2(I, outtype)
+function S = sum2(I, outtype, nan_flag)
 % usage: sum2(I, outtype='double')
 % calculates the sum of images in the input matrix. 
 % returns a 3D or 4D (or higher) output. 
@@ -13,6 +13,10 @@ function S = sum2(I, outtype)
         outtype = 'double';
     end
     
-    S = sum(sum(I,1, outtype),2, outtype);
+    if nargin<3 || isempty(nan_flag)
+        nan_flag = 'omitnan';
+    end
+    
+    S = sum(sum(I,1, outtype, nan_flag),2, outtype, nan_flag);
 
 end

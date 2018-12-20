@@ -48,7 +48,9 @@ function [line_handle, fill_handle] = shaded(x,y,err,varargin)
     
     input.axes.NextPlot = 'add';
     
-    line_handle = plot(input.axes, x, y, 'Color', input.LineColor, 'LineWidth', input.LineWidth, 'LineStyle', input.LineStyle);
+    if input.LineWidth>0
+        line_handle = plot(input.axes, x, y, 'Color', input.LineColor, 'LineWidth', input.LineWidth, 'LineStyle', input.LineStyle);
+    end
     
     input.axes.NextPlot = holding_pattern;
     

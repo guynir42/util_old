@@ -35,7 +35,7 @@ classdef DynamicObject < dynamicprops
                 idx = find(strcmp(obj.list_added_properties, propname), 1, 'first');
                 p = obj.list_added_properties_objects{idx};
             else
-                error('new property %s is part of the object but not part of "list_added_properties"!', propname);
+                error('new property "%s" is part of the object but not part of "list_added_properties"!', propname);
             end
             
             if nargin>2

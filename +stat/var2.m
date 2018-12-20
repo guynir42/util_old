@@ -11,6 +11,6 @@ function V = var2(I)
 
     M = mean2(I); % could have 3rd or 4th non scalar dimensions... 
 
-    V = mean2(bsxfun(@minus, double(I), M).^2);
+    V = mean2((I-M).^2);
    
 end

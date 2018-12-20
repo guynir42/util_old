@@ -42,9 +42,18 @@ function [mu, sigma, values] = sigma_clipping(values, varargin)
         ax = gca;
     end
     
-    mu = median(values);
-    sigma = fwhm(values);
-    N = sum(values>mu-Nsigma*sigma & values<mu+Nsigma*sigma);
+    values = values(~isnan(values));
+    
+    mu = median(values, 'omitnan');
+%     sigma = fwhm(values);
+    sigma = std(values, 'omitnan');
+%     N = sum(values>mu-Nsigma*sigma & values<mu+Nsigma*sigma);
+    values = values(values>mu-Nsigma*sigma & values<mu+Nsigma*sigma);
+    N = numel(values);
+    
+    if isnan(mu)
+        return; % silently give back a NaN if the inputs are all NaN!
+    end
     
     for ii = 1:Niter_max
         
@@ -53,7 +62,8 @@ function [mu, sigma, values] = sigma_clipping(values, varargin)
         N_prev = N;
         
         if cs(dist, 'gauss')
-            phat = mle(values, 'logpdf', @(x,m,s) -0.5*log(2*pi*s.^2) -0.5*(x-m).^2/s.^2, 'start', [mu_prev,sigma_prev], 'lowerbound', [0 0]);
+            phat = mle(values, 'logpdf', @(x,m,s) -0.5*log(2*pi*s.^2) -0.5*(x-m).^2/s.^2, 'start', [mu_prev,sigma_prev],...
+                'LowerBound',[mu_prev-Nsigma*sigma_prev, 0], 'UpperBound', [mu_prev+Nsigma*sigma_prev, Nsigma*sigma_prev]);
         elseif cs(dist, {'weibull', 'max values'})
             phat = evfit(-values); 
             phat(1) = -phat(1);
@@ -61,10 +71,14 @@ function [mu, sigma, values] = sigma_clipping(values, varargin)
         
         mu = phat(1);
         sigma = phat(2);
-                
+        
         if use_plot
             disp(['plotting iteration ' num2str(ii)]);
             step = (max(values)-min(values))/sqrt(N);
+            if all(values==round(values)) && step<1
+                step = 1;
+            end
+                
             x = min(values):step:max(values);
             x2 = min(values):step/4:max(values);
             histogram(ax, values, x);

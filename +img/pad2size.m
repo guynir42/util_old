@@ -13,7 +13,8 @@ function M_out = pad2size(M_in, size_needed)
         return;
     end
     
-    S_in = util.vec.imsize(M_in);
+    S_in = size(M_in);
+    S_in = S_in(1:2);
     
     if size_needed(1)>S_in(1) || size_needed(2)>S_in(2)
         

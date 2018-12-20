@@ -9,7 +9,12 @@ function I_out = downsample(I, binning, normalization, memory_limit)
 %    size of array exceeds it, conv_f will loop on the pages of I. 
 
     if nargin==0, help('util.img.downsample'); return; end
-
+    
+    if isempty(I)
+        I_out = [];
+        return;
+    end
+    
     if nargin<2 || isempty(binning)
         binning = 2;
     end
