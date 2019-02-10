@@ -10,6 +10,8 @@ function [mu, sigma, values] = sigma_clipping(values, varargin)
     end
     
     % add input checks on "values"
+    values = values(:);
+    values(isnan(values)) = [];
     
     Nsigma = 5;
     Niter_max = 5;

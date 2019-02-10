@@ -2,7 +2,7 @@ function setImage(I, ax)
    
     if ndims(I)>3
         I = I(:,:,end,end);
-    elseif ndims(I)>2    
+    elseif ndims(I)>2
         I = I(:,:,end);
     end
     

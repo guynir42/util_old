@@ -304,6 +304,14 @@ classdef ContrastLimits < handle
             
             obj.clim = util.img.autodyn(im.CData);
             
+            if obj.clim(1)<0 
+                obj.min_val = -2.^ceil(log2(abs(obj.clim(1)))); 
+            else
+                obj.min_val = 0;
+            end
+            
+            obj.max_val = 2.^ceil(log2(obj.clim(2)));
+            
             obj.update;
             
         end

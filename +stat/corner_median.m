@@ -29,6 +29,6 @@ function M = corner_median(img, num_pix)
     values3 = img(end-num_pix:end,1:num_pix,:,:);
     values4 = img(end-num_pix:end,end-num_pix:end,:,:);
 
-    M = median([values1(:); values2(:); values3(:); values4(:)]);
+    M = median([values1(:); values2(:); values3(:); values4(:)], 'omitnan');
 
 end

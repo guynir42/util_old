@@ -26,6 +26,14 @@ function M = corner_mean(img, num_pix)
 
     img = double(img);
 
+    if num_pix>=size(img,1)
+        num_pix = size(img,1)-1;
+    end
+    
+    if num_pix>=size(img,2)
+        num_pix = size(img,2)-1;
+    end
+    
     M = mean2(img(1:num_pix,1:num_pix,:,:)) + ...
         mean2(img(1:num_pix,end-num_pix:end,:,:)) + ...
         mean2(img(end-num_pix:end,1:num_pix,:,:)) + ...

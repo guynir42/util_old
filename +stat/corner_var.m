@@ -19,6 +19,14 @@ function S = corner_var(img, num_pix)
         num_pix = ceil(min(size(img, 1), size(img,2))*num_pix);
     end
     
+    if num_pix>=size(img,1)
+        num_pix = size(img,1)-1;
+    end
+    
+    if num_pix>=size(img,2)
+        num_pix = size(img,2)-1;
+    end
+    
     S = mean(nanvar(img(1:num_pix,1:num_pix,:,:))) + ...
         mean(nanvar(img(1:num_pix,end-num_pix:end,:,:))) + ...
         mean(nanvar(img(end-num_pix:end,1:num_pix,:,:))) + ...

@@ -59,7 +59,7 @@ classdef FigHandler < handle
                 obj.fig = matlab.ui.Figure.empty;
                 obj.findFigure(varargin{1}, varargin{2:end});
                 if isempty(obj.fig)
-                    obj.makeFigure(varargin{1}, varargin{2:end});                    
+                    obj.makeFigure(varargin{1}, varargin{2:end});
                 end
                 
                 
@@ -141,7 +141,7 @@ classdef FigHandler < handle
             obj.fig = figure;
             obj.reset;
             obj.parse(varargin{:});
-            
+
             if nargin>1 && ~isempty(name) && ischar(name)
                 obj.name = name;
                 obj.fig.Name = name;
